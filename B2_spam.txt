@@ -1,0 +1,88 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import (accuracy_score, precision_score, recall_score,
+                             f1_score, confusion_matrix, classification_report)
+
+
+
+df = pd.read_csv('emails.csv')
+print(df.shape)
+df.head()
+
+
+df = df.drop('Email No.', axis=1)          # ID column carries no information
+
+print('Missing values:', df.isnull().sum().sum())
+print('Duplicate rows:', df.duplicated().sum())
+df = df.drop_duplicates()
+
+sns.countplot(x='Prediction', data=df)     # check class balance
+plt.xticks([0, 1], ['Not Spam', 'Spam'])
+plt.show()
+print(df['Prediction'].value_counts())
+
+
+X = df.drop('Prediction', axis=1)
+y = df['Prediction']
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y)
+
+scaler = MinMaxScaler()
+X_train = scaler.fit_transform(X_train)    # learn the scale from training data only
+X_test = scaler.transform(X_test)          # apply the same scale to test data
+
+
+
+ks = range(1, 16, 2)                       # odd values avoid voting ties
+accs = [KNeighborsClassifier(n_neighbors=k).fit(X_train, y_train).score(X_test, y_test)
+        for k in ks]
+
+plt.plot(ks, accs, marker='o')
+plt.xlabel('K'); plt.ylabel('Accuracy'); plt.grid(True)
+plt.show()
+
+best_k = ks[int(np.argmax(accs))]
+print('Best K:', best_k)
+
+
+
+knn = KNeighborsClassifier(n_neighbors=best_k).fit(X_train, y_train)
+svm = SVC(kernel='linear', random_state=42).fit(X_train, y_train)
+
+
+
+def evaluate(name, model):
+    pred = model.predict(X_test)
+    print(f'----- {name} -----')
+    print(confusion_matrix(y_test, pred))
+    print(classification_report(y_test, pred, target_names=['Not Spam', 'Spam']))
+    return {'Model': name,
+            'Accuracy': accuracy_score(y_test, pred),
+            'Precision': precision_score(y_test, pred),
+            'Recall': recall_score(y_test, pred),
+            'F1': f1_score(y_test, pred)}
+
+results = pd.DataFrame([evaluate('KNN', knn), evaluate('SVM', svm)])
+print(results.round(3))
+
+
+
+
+plt.figure(figsize=(10, 4))
+for i, (n, m) in enumerate([('KNN', knn), ('SVM', svm)]):
+    plt.subplot(1, 2, i+1)
+    sns.heatmap(confusion_matrix(y_test, m.predict(X_test)), annot=True, fmt='d',
+                cmap='Blues', xticklabels=['Not Spam', 'Spam'], yticklabels=['Not Spam', 'Spam'])
+    plt.title(n); plt.xlabel('Predicted'); plt.ylabel('Actual')
+plt.show()
+
+
+
+
