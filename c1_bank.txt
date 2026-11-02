@@ -1,0 +1,47 @@
+
+pragma solidity ^0.8.34;
+
+contract BankAccount {
+
+    // Store balance of each user's account
+    mapping(address => uint) private balances;
+
+    // Deposit ETH
+    function deposit(uint amountInEther) public payable {
+
+        require(amountInEther > 0, "Amount must be greater than zero");
+
+        require(
+            msg.value == amountInEther * 1 ether,
+            "Incorrect ETH amount sent"
+        );
+
+        balances[msg.sender] += msg.value;
+    }
+
+    // Withdraw ETH
+    function withdraw(uint amountInEther) public {
+
+        uint amount = amountInEther * 1 ether;
+
+        require(amount > 0, "Invalid amount");
+        require(balances[msg.sender] >= amount, "Insufficient balance");
+
+        // Update balance before transferring ETH
+        balances[msg.sender] -= amount;
+
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
+
+        require(success, "Transfer failed");
+    }
+
+    // Display user's balance
+    function getBalance() public view returns (uint) {
+        return balances[msg.sender];
+    }
+
+    // Display total bank balance
+    function getBankBalance() public view returns (uint) {
+        return address(this).balance;
+    }
+}
