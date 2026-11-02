@@ -1,0 +1,126 @@
+
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+using namespace std;
+
+// Partition function
+int partition(int arr[], int low, int high) {
+
+    int pivot = arr[high];
+    int i = low - 1;
+
+    for (int j = low; j < high; j++) {
+
+        if (arr[j] < pivot) {
+            i++;
+
+            swap(arr[i], arr[j]);
+        }
+    }
+
+    swap(arr[i + 1], arr[high]);
+
+    return i + 1;
+}
+
+// Deterministic Quick Sort
+void deterministicQuickSort(int arr[], int low, int high) {
+
+    if (low < high) {
+
+        int p = partition(arr, low, high);
+
+        deterministicQuickSort(arr, low, p - 1);
+        deterministicQuickSort(arr, p + 1, high);
+    }
+}
+
+// Randomized Partition
+int randomizedPartition(int arr[], int low, int high) {
+
+    int randomIndex = low + rand() % (high - low + 1);
+
+    swap(arr[randomIndex], arr[high]);
+
+    return partition(arr, low, high);
+}
+
+// Randomized Quick Sort
+void randomizedQuickSort(int arr[], int low, int high) {
+
+    if (low < high) {
+
+        int p = randomizedPartition(arr, low, high);
+
+        randomizedQuickSort(arr, low, p - 1);
+        randomizedQuickSort(arr, p + 1, high);
+    }
+}
+
+// Display array
+void display(int arr[], int n) {
+
+    for (int i = 0; i < n; i++) {
+        cout << arr[i] << " ";
+    }
+
+    cout << endl;
+}
+
+int main() {
+
+    int n, choice;
+
+    cout << "Enter number of elements: ";
+    cin >> n;
+
+    if (n <= 0) {
+        cout << "Invalid size!";
+        return 0;
+    }
+
+    int arr[n];
+
+    cout << "Enter array elements:\n";
+
+    for (int i = 0; i < n; i++) {
+        cin >> arr[i];
+    }
+
+    cout << "\n1. Deterministic Quick Sort";
+    cout << "\n2. Randomized Quick Sort";
+
+    cout << "\nEnter your choice: ";
+    cin >> choice;
+
+    srand(time(0));
+
+    if (choice == 1) {
+
+        deterministicQuickSort(arr, 0, n - 1);
+
+        cout << "\nSorted Array using Deterministic Quick Sort:\n";
+        display(arr, n);
+    }
+
+    else if (choice == 2) {
+
+        randomizedQuickSort(arr, 0, n - 1);
+
+        cout << "\nSorted Array using Randomized Quick Sort:\n";
+        display(arr, n);
+    }
+
+    else {
+        cout << "Invalid Choice!";
+    }
+
+    return 0;
+}
+
+//Case	Deterministic	Randomized
+//Best	O(n log n)	O(n log n)
+//Average / Expected	O(n log n)	O(n log n) expected
+//Worst	O(n²)	O(n²)
+//Auxiliary space	O(log n) average	O(log n) expected
