@@ -1,0 +1,61 @@
+
+#include <iostream>
+using namespace std;
+
+// Recursive function
+int fibonacciRecursive(int n) {
+    if (n == 0)
+        return 0;
+
+    if (n == 1)
+        return 1;
+
+    return fibonacciRecursive(n - 1) + fibonacciRecursive(n - 2);
+}
+
+// Non-recursive function
+void fibonacciNonRecursive(int n) {
+    int a = 0, b = 1, c;
+
+    for (int i = 0; i < n; i++) {
+        cout << a << " ";
+
+        c = a + b;
+        a = b;
+        b = c;
+    }
+}
+
+int main() {
+    int n, choice;
+
+    cout << "Enter number of terms: ";
+    cin >> n;
+
+    cout << "\n1. Recursive";
+    cout << "\n2. Non-Recursive";
+    cout << "\nEnter your choice: ";
+    cin >> choice;
+
+    if (choice == 1) {
+        cout << "Fibonacci Series: ";
+
+        for (int i = 0; i < n; i++) {
+            cout << fibonacciRecursive(i) << " ";
+        }
+    }
+    else if (choice == 2) {
+        cout << "Fibonacci Series: ";
+        fibonacciNonRecursive(n);
+    }
+    else {
+        cout << "Invalid Choice!";
+    }
+
+    return 0;
+}
+
+
+//Method	Time Complexity	Space Complexity
+//Recursive	O(2ⁿ)	O(n)
+//Non-Recursive	O(n)	O(1)
