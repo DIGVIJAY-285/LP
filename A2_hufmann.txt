@@ -1,0 +1,105 @@
+
+#include <iostream>
+#include <queue>
+#include <vector>
+using namespace std;
+
+// Structure for creating a Huffman tree node
+struct Node {
+    char ch;
+    int freq;
+    Node *left, *right;
+
+    Node(char c, int f) {
+        ch = c;
+        freq = f;
+        left = right = NULL;
+    }
+};
+
+// Compare function for minimum priority queue
+struct Compare {
+    bool operator()(Node* a, Node* b) {
+        return a->freq > b->freq;
+    }
+};
+
+// Function to print Huffman codes
+void printCodes(Node* root, string code) {
+    if (root == NULL)
+        return;
+
+    // If leaf node, print character and code
+    if (root->left == NULL && root->right == NULL) {
+        cout << root->ch << " : " << code << endl;
+        return;
+    }
+
+    printCodes(root->left, code + "0");
+    printCodes(root->right, code + "1");
+}
+
+// Function to build Huffman Tree
+void huffman(char ch[], int freq[], int n) {
+
+    priority_queue<Node*, vector<Node*>, Compare> pq;
+
+    // Insert all characters into priority queue
+    for (int i = 0; i < n; i++) {
+        pq.push(new Node(ch[i], freq[i]));
+    }
+
+    // Build Huffman Tree
+    while (pq.size() > 1) {
+
+        Node* left = pq.top();
+        pq.pop();
+
+        Node* right = pq.top();
+        pq.pop();
+
+        // Create new internal node
+        Node* newNode = new Node('$',left->freq + right->freq);
+
+        newNode->left = left;
+        newNode->right = right;
+
+        pq.push(newNode);
+    }
+
+    // Print Huffman Codes
+    cout << "\nHuffman Codes:\n";
+
+    if (n == 1)
+        printCodes(pq.top(), "0");
+    else
+        printCodes(pq.top(), "");
+}
+
+int main() {
+    int n;
+
+    cout << "Enter number of characters: ";
+    cin >> n;
+
+    if (n <= 0) {
+        cout << "Invalid number of characters!";
+        return 0;
+    }
+
+    char ch[n];
+    int freq[n];
+
+    cout << "Enter characters and their frequencies:\n";
+
+    for (int i = 0; i < n; i++) {
+        cin >> ch[i] >> freq[i];
+    }
+
+    huffman(ch, freq, n);
+
+    return 0;
+}
+
+//Overall time	O(n log n)
+//Space	O(n)
