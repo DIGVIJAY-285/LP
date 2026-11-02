@@ -1,0 +1,85 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.metrics import silhouette_score
+from sklearn.decomposition import PCA
+from scipy.cluster.hierarchy import dendrogram, linkage
+
+
+
+df = pd.read_csv('sales_data_sample.csv', encoding='latin1')
+print(df.shape)
+df.head()
+
+
+
+cols = ['QUANTITYORDERED', 'PRICEEACH', 'SALES', 'MSRP']
+
+print(df[cols].isnull().sum())
+print('Duplicates:', df.duplicated().sum())
+df[cols].describe()
+
+
+
+X = StandardScaler().fit_transform(df[cols])
+
+
+
+wcss = []
+for k in range(1, 11):
+    wcss.append(KMeans(n_clusters=k, n_init=10, random_state=42).fit(X).inertia_)
+
+plt.plot(range(1, 11), wcss, marker='o')
+plt.xlabel('Number of clusters (K)'); plt.ylabel('WCSS (inertia)')
+plt.title('Elbow Method'); plt.grid(True)
+plt.show()
+
+
+
+for k in range(2, 9):
+    labels = KMeans(n_clusters=k, n_init=10, random_state=42).fit_predict(X)
+    print(f'K = {k}  silhouette = {silhouette_score(X, labels):.3f}')
+
+
+
+k = 3                                        # set this from your elbow plot
+km = KMeans(n_clusters=k, n_init=10, random_state=42)
+df['KMeans_Cluster'] = km.fit_predict(X)
+
+print(df['KMeans_Cluster'].value_counts())
+print('Silhouette:', round(silhouette_score(X, df['KMeans_Cluster']), 3))
+
+
+
+
+Z = linkage(X, method='ward')
+
+plt.figure(figsize=(10, 4))
+dendrogram(Z, truncate_mode='lastp', p=30)
+plt.title('Dendrogram'); plt.xlabel('Cluster'); plt.ylabel('Distance')
+plt.show()
+
+hc = AgglomerativeClustering(n_clusters=k, linkage='ward')
+df['HC_Cluster'] = hc.fit_predict(X)
+print(df['HC_Cluster'].value_counts())
+
+
+
+
+pc = PCA(n_components=2).fit_transform(X)
+
+plt.figure(figsize=(11, 4))
+for i, col in enumerate(['KMeans_Cluster', 'HC_Cluster']):
+    plt.subplot(1, 2, i + 1)
+    plt.scatter(pc[:, 0], pc[:, 1], c=df[col], cmap='viridis', s=10)
+    plt.title(col); plt.xlabel('PC1'); plt.ylabel('PC2')
+plt.show()
+
+
+
+
+print(df.groupby('KMeans_Cluster')[cols].mean().round(1))
+print(pd.crosstab(df['KMeans_Cluster'], df['DEALSIZE']))
